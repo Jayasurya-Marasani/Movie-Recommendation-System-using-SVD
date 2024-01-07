@@ -1,0 +1,115 @@
+clc;
+close all;
+
+%load test and train datasets
+
+clc;
+T=ratingsimport('ratings.dat',[1,inf]);
+head(T,10);
+T=table2array(T);
+T=T(:,1:3);
+T=array2table(T,'VariableNames',{'UserID','MovieID','Ratings'});
+M=importmovies('movies.dat',[1,inf]);
+head(M,10);
+T=unstack(T,'Ratings','MovieID','VariableNamingRule','preserve');
+T=table2array(T);
+T(:,1)=[];
+ratings_mat=T;
+ratings_mat=ratings_mat';
+ratings_mat(isnan(ratings_mat))=0;
+%%
+for i=1:3706
+    norm_mat(i,:)=normalise(ratings_mat(i,:));
+end
+%%
+[U,S,V]=svd(norm_mat);
+%%
+k=input('Enter The K value:');
+moviename=input("Enter movie name: ",'s');   %Toy Story (1995)
+v=V';
+clc;
+pred=predict(ratings_mat,U,S,v,k);
+%%
+f=errorrate(norm_mat,pred);
+%%
+%%
+m=M.MovieID(find(M.MovieName==moviename),1);
+v=V';
+
+%%
+v(k:end,:)=[];
+siml=zeros(3076,3076);
+for i=1:3706
+    for j=1:3706
+        x=v(:,i);
+        y=v(:,j);
+        siml(i,j)=getCosineSimilarity(x,y);
+    end
+end
+%%
+x=v(:,m);
+cosimilarity=zeros(3706,1);
+for i=1:3706
+    y=v(:,i);
+    cosimilarity(i)=getCosineSimilarity(x,y);
+end
+top=maxk(cosimilarity,11);
+disp("The recommendations for "+moviename+":");
+for i=1:10
+    [r, ~] = find(cosimilarity == top(i));
+    name=M.MovieName(find(M.MovieID==r),1);
+    disp(name);
+end
+
+
+mid=10;
+z=siml(mid,:);
+z=sort(z,'descend');
+z=z(1:1:10);
+
+%%
+% s=size(T);
+% test=T(1:floor(s(1,1)*0.2),1:3);
+% stest=size(test);
+% train=T(floor(s(1,1)*0.2)+1:s(1,1),1:3);
+% size(train);
+% train=array2table(train,'VariableNames',{'UserID','MovieID','Ratings'});
+% test=array2table(test,'VariableNames',{'UserID','MovieID','Ratings'});
+% train=unstack(train,'Ratings','MovieID','VariableNamingRule','preserve');
+% test=unstack(test,'Ratings','MovieID','VariableNamingRule','preserve');
+% train=table2array(train);
+% test=table2array(test);
+% train(isnan(train))=0;
+% test(isnan(test))=0;
+% %%
+% test(:,1) = [];
+% train(:,1)=[];
+% test=test';
+% train=train';
+% 
+% %IDX = find(train);
+% %sizeX=size(train);
+% %%
+% [U,S,V]=svd(train);
+% %%
+% U(:,100:end)=[];
+% V(100:end,:)=[];
+% S(100:end,:)=[];
+% S(:,100:end)=[];
+% %%
+% Q=U;
+% P=S*V';       %p transpose
+%%
+%Q(:,100:end) = [];
+%%
+%P(100:end,:)=[];
+%%
+% s2=S;
+% s2(100:end,:)=[];
+% s2(:,100:end)=[];
+% U1=U;
+% V1=V';
+% U1(:,100:end)=[];
+% V1(100:end,:)=[];
+% e=U1*s2*V1;
+%%

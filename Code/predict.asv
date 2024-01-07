@@ -1,0 +1,8 @@
+function [pr]=predict(act_mat,u,s,v1,k1)
+u(:,k1:end);
+s=s(1:k1,1:k1);
+v1(k1:end,:)=[];
+q=u;
+p=s*v1;
+for i=1:3706
+   
